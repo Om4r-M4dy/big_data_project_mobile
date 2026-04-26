@@ -1,0 +1,28 @@
+name: big_data_project
+description: "A premium search mobile app using SQLite."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  path: ^1.8.3
+  url_launcher: ^6.3.2
+  speech_to_text: ^7.3.0
+  sqflite: ^2.4.2+1
+  path_provider: ^2.1.5
+  sqlite3_flutter_libs: ^0.5.24
+  sqflite_common_ffi: ^2.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/search_data.db
