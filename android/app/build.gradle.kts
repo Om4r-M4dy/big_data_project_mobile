@@ -28,6 +28,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // Enable FTS5 support for SQLite
+        buildConfigField("boolean", "ENABLE_FTS5", "true")
     }
 
     buildTypes {

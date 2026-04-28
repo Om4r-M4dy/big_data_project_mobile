@@ -43,18 +43,33 @@ class DatabaseService {
 
     if (!await _checkIntegrity()) {
       // Check for FTS5 vs FTS4 compatibility
-      final modules = await _db!.rawQuery(
-        "SELECT name FROM pragma_module_list()",
-      );
-      final allModules = modules.map((m) => m['name'].toString()).toList();
+      bool hasFts5 = false;
+      bool hasFts4 = false;
+      
+      try {
+        final modules = await _db!.rawQuery(
+          "SELECT name FROM pragma_module_list()",
+        );
+        final allModules = modules.map((m) => m['name'].toString()).toList();
+        hasFts5 = allModules.contains('fts5');
+        hasFts4 = allModules.contains('fts4');
+      } catch (e) {
+        // pragma_module_list might fail if FTS5 is not available
+        debugPrint('[DB] Module list check failed: $e - attempting FTS4 fallback');
+        hasFts4 = true; // Assume FTS4 is available
+      }
 
-      if (allModules.contains('fts4') && !allModules.contains('fts5')) {
+      if ((hasFts4 || !hasFts5) && !hasFts5) {
         debugPrint('[DB] FTS5 missing. Auto-repairing using FTS4 fallback...');
         await _ensureFts4Table();
         if (await _checkIntegrity()) {
           debugPrint('[DB] Ready (FTS4).');
           return;
         }
+      }
+      
+      // If still not ready, throw error
+      if (!await _checkIntegrity()) {
         throw Exception(
           'Database integrity check failed. The data might be corrupted or incompatible with this device.',
         );
@@ -130,29 +145,34 @@ class DatabaseService {
         )).isNotEmpty;
         final tableName = useV4 ? 'pages_v4' : 'pages';
 
-        final rows = await _db!.rawQuery(
-          "SELECT url, title, content "
-          "FROM $tableName "
-          "WHERE $tableName MATCH ? LIMIT 30",
-          [ftsQuery],
-        );
+        try {
+          final rows = await _db!.rawQuery(
+            "SELECT url, title, content "
+            "FROM $tableName "
+            "WHERE $tableName MATCH ? LIMIT 30",
+            [ftsQuery],
+          );
 
-        if (rows.isNotEmpty) {
-          results = rows.map((row) {
-            String title = row['title']?.toString() ?? '';
-            String content = row['content']?.toString() ?? '';
+          if (rows.isNotEmpty) {
+            results = rows.map((row) {
+              String title = row['title']?.toString() ?? '';
+              String content = row['content']?.toString() ?? '';
 
-            if (normalized.isNotEmpty) {
-              title = _manualHighlight(title, normalized, fullText: true);
-              content = _manualHighlight(content, normalized, fullText: true);
-            }
+              if (normalized.isNotEmpty) {
+                title = _manualHighlight(title, normalized, fullText: true);
+                content = _manualHighlight(content, normalized, fullText: true);
+              }
 
-            return {
-              'url': row['url']?.toString() ?? '',
-              'title': title,
-              'content': content,
-            };
-          }).toList();
+              return {
+                'url': row['url']?.toString() ?? '',
+                'title': title,
+                'content': content,
+              };
+            }).toList();
+          }
+        } catch (ftsError) {
+          // FTS might not be available, will use LIKE fallback
+          debugPrint('[DB] FTS error: $ftsError');
         }
       }
     } catch (e) {
