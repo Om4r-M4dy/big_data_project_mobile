@@ -6,6 +6,9 @@ plugins {
 }
 
 android {
+    buildFeatures {
+        buildConfig = true
+    }
     namespace = "com.example.big_data_project"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
