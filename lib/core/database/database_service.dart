@@ -155,10 +155,23 @@ class DatabaseService {
 
           if (rows.isNotEmpty) {
             results = rows.map((row) {
-              String title = row['title']?.toString() ?? '';
-              String content = row['content']?.toString() ?? '';
-
+              final String rawTitle = row['title']?.toString() ?? '';
+              final String rawContent = row['content']?.toString() ?? '';
+              
+              // ─── Calculate Keyword Occurrences ───
+              int count = 0;
               if (normalized.isNotEmpty) {
+                // Use regex to count how many times the term appears in raw title/content
+                final regex = RegExp(RegExp.escape(normalized), caseSensitive: false);
+                count += regex.allMatches(rawTitle).length;
+                count += regex.allMatches(rawContent).length;
+              }
+
+              // ─── Apply Visual Highlighting ───
+              String title = rawTitle;
+              String content = rawContent;
+              if (normalized.isNotEmpty) {
+                // Inject <b> tags for UI highlighting
                 title = _manualHighlight(title, normalized, fullText: true);
                 content = _manualHighlight(content, normalized, fullText: true);
               }
@@ -167,6 +180,7 @@ class DatabaseService {
                 'url': row['url']?.toString() ?? '',
                 'title': title,
                 'content': content,
+                'occurrenceCount': count,
               };
             }).toList();
           }
@@ -195,10 +209,23 @@ class DatabaseService {
 
         // Manual highlighting for LIKE results
         results = rows.map((row) {
-          String title = row['title']?.toString() ?? '';
-          String content = row['content']?.toString() ?? '';
+          final String rawTitle = row['title']?.toString() ?? '';
+          final String rawContent = row['content']?.toString() ?? '';
 
+          // ─── Calculate Keyword Occurrences ───
+          int count = 0;
           if (normalized.isNotEmpty) {
+            // Count occurrences in raw text for the LIKE fallback path
+            final regex = RegExp(RegExp.escape(normalized), caseSensitive: false);
+            count += regex.allMatches(rawTitle).length;
+            count += regex.allMatches(rawContent).length;
+          }
+
+          // ─── Apply Visual Highlighting ───
+          String title = rawTitle;
+          String content = rawContent;
+          if (normalized.isNotEmpty) {
+            // Inject <b> tags for UI highlighting
             title = _manualHighlight(title, normalized, fullText: true);
             content = _manualHighlight(content, normalized, fullText: true);
           }
@@ -207,6 +234,7 @@ class DatabaseService {
             'url': row['url']?.toString() ?? '',
             'title': title,
             'content': content,
+            'occurrenceCount': count,
           };
         }).toList();
       } catch (e) {

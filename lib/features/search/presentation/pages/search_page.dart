@@ -204,15 +204,39 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildStatusBar() {
     if (!_isInitialized || _results.isEmpty) return const SizedBox.shrink();
+    
+    final int totalMatches = _results.fold(0, (sum, item) => sum + item.occurrenceCount);
+    
     return Padding(
-      padding: const EdgeInsets.only(left: 26, bottom: 6),
-      child: Text(
-        '${_results.length} result${_results.length == 1 ? '' : 's'}',
-        style: const TextStyle(
-          color: Color(0xFF64748B),
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ),
+      padding: const EdgeInsets.only(left: 26, right: 26, bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '${_results.length} result${_results.length == 1 ? '' : 's'}',
+            style: const TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (totalMatches > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '$totalMatches total matches',
+                style: const TextStyle(
+                  color: Color(0xFF10B981),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

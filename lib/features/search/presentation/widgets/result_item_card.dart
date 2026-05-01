@@ -107,6 +107,24 @@ class _ResultItemCardState extends State<ResultItemCard> {
                         ),
                       ),
                     ),
+                    if (widget.item.occurrenceCount > 0) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF08A),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${widget.item.occurrenceCount} matches',
+                          style: const TextStyle(
+                            color: Color(0xFF854D0E),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 8),
